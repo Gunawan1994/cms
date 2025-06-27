@@ -1,6 +1,6 @@
 
 syntax="proto3";
-option go_package = "cms/protocgen/global/v1/meta";
+option go_package = "cms/protocgen/global/meta";
 
 
 import "google/protobuf/any.proto";

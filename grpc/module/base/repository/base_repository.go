@@ -36,6 +36,9 @@ type BaseRepository[T any] interface {
 	PaginationQuery(page, pageSize int, query *gorm.DB) (PaginationResult[T], error)
 	OrderQuery(param model.OrderParam, query *gorm.DB) *gorm.DB
 	FilterQuery(filter model.FilterParams, query *gorm.DB) *gorm.DB
+	FindUserByEmail(
+		ctx context.Context, tx *gorm.DB, email string,
+	) (*T, error)
 }
 
 type BaseRepositoryImpl[T any] struct {
@@ -306,4 +309,18 @@ func (r *BaseRepositoryImpl[T]) _generateWhere(filter model.FilterParam) []inter
 		keyList[0] = keySearch
 	}
 	return keyList
+}
+
+func (r *BaseRepositoryImpl[T]) FindUserByEmail(
+	ctx context.Context, tx *gorm.DB, email string,
+) (*T, error) {
+	var data T
+	if err := tx.WithContext(ctx).Preload(clause.Associations).Where("email = ?", email).First(&data).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		slog.Error("failed to find by email", slog.Any("error", err))
+		return nil, err
+	}
+	return &data, nil
 }

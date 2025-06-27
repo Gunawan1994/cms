@@ -1,24 +1,23 @@
-FROM golang:1.23.1 AS builder
-RUN apt-get update
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64
-WORKDIR /go/src/app
+# Stage 1: Build
+FROM golang AS builder
+
+WORKDIR /app
+
 COPY . .
 
-RUN rm -r go.mod
-RUN rm -r go.sum
+# Build binary and name it grpc-server to avoid naming conflict
+RUN CGO_ENABLED=0 go build -o grpc-server /app/grpc/cmd/main.go
 
-RUN go mod init payment
-RUN go mod tidy
-
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build -o /go/bin/app
-
+# Stage 2: Final image
 FROM alpine:latest
-RUN apk add tzdata
-ENV TZ Asia/Jakarta
-COPY --from=builder /go/bin/app .
-ENTRYPOINT ["./app"]
+
+WORKDIR /app
+
+# You may need ca-certificates if using HTTPS
+RUN apk --no-cache add ca-certificates
+
+# Copy binary only
+COPY --from=builder /app/grpc-server /app/grpc-server
+
+# Run the binary
+CMD ["./grpc-server"]

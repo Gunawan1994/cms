@@ -5,19 +5,30 @@ import (
 	"net"
 
 	"cms/grpc/helpers/database"
+	slogLogger "cms/grpc/helpers/logger"
+	"cms/grpc/helpers/utils/converter"
 	"cms/grpc/helpers/xvalidator"
 	_middelware "cms/grpc/module/auth/delivery/middleware_grpc"
 
-	"cms/config"
-	slogLogger "cms/grpc/helpers/logger"
+	"cms/grpc/config"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	_authGrpc "cms/grpc/module/auth/delivery/grpc"
-
 	"google.golang.org/grpc"
+
+	_userGrpc "cms/grpc/module/user/delivery/grpc"
+	_userRepository "cms/grpc/module/user/repository/postgres"
+	_userUseCase "cms/grpc/module/user/usecase"
+
+	_articleGrpc "cms/grpc/module/article/delivery/grpc"
+	_articleRepository "cms/grpc/module/article/repository/postgres"
+	_articleUseCase "cms/grpc/module/article/usecase"
+
+	_authGrpc "cms/grpc/module/auth/delivery/grpc"
+	_authRepository "cms/grpc/module/auth/repository/postgres"
+	_authUseCase "cms/grpc/module/auth/usecase"
 )
 
 func main() {
@@ -49,20 +60,28 @@ func main() {
 		DbUser: conf.Database.Pguser,
 		DbPass: conf.Database.Pgpassword,
 		DbName: conf.Database.Pgdatabase,
-		DbPort: "5432",
+		DbPort: converter.ToString(conf.Database.Pgport),
 	})
 
-	repositoryAuth := _authRepository.NewAuthRepository()
-	useCaseAuth := _authUseCase.NewAuthUseCase(dbGorm.GetDB(), repositoryAuth)
+	userRepository := _userRepository.NewUserRepository()
+	userUseCase := _userUseCase.NewUserUseCase(dbGorm.GetDB(), userRepository)
 
-	middlewareJWT := _middelware.NewAuthenticationJWT(usecaseAuth, map[string]string{
-		"AuthService": "LoginUser",
+	articleRepository := _articleRepository.NewArticleRepository()
+	articleUseCase := _articleUseCase.NewArticleUseCase(dbGorm.GetDB(), articleRepository)
+
+	authRepository := _authRepository.NewAuthRepository()
+	authUseCase := _authUseCase.NewAuthUseCase(dbGorm.GetDB(), authRepository, userRepository)
+
+	middlewareJWT := _middelware.NewAuthenticationJWT(authUseCase, map[string][]string{
+		"AuthService": {"LoginUser", "RegisterUser"}, // ← ini yang benar
 	})
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(middlewareJWT.JwtInterceptor),
 	)
 
-	_authGrpc.NewAuthService(grpcServer, usecaseAuth)
+	_userGrpc.NewUserService(grpcServer, userUseCase)
+	_articleGrpc.NewArticleService(grpcServer, articleUseCase)
+	_authGrpc.NewAuthService(grpcServer, authUseCase)
 
 	httpPort := conf.AppEnv.HttpPort
 

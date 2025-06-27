@@ -362,7 +362,7 @@ const file_global_meta_meta_proto_rawDesc = "" +
 	"\fResponseJson\x12\x19\n" +
 	"\x04meta\x18\x01 \x01(\v2\x05.MetaR\x04meta\x12-\n" +
 	"\x04data\x18\x02 \x01(\v2\x14.google.protobuf.AnyH\x00R\x04data\x88\x01\x01B\a\n" +
-	"\x05_dataB\x1eZ\x1ccms/protocgen/global/v1/metab\x06proto3"
+	"\x05_dataB\x1bZ\x19cms/protocgen/global/metab\x06proto3"
 
 var (
 	file_global_meta_meta_proto_rawDescOnce sync.Once

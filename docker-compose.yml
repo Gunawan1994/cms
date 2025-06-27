@@ -12,44 +12,41 @@ services:
     environment:
       - POSTGRES_DB=cms
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=12345
+      - POSTGRES_PASSWORD=123456
     volumes:
       - ./.postgres-data/db:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5433
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 3s
       retries: 10
 
-  grpc:
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-    environment:
-      - LISTEN_PORT=:8000
-      - POSTGRES_DB=cms
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=12345
-      - POSTGRES_ADDR=postgres
-      - POSTGRES_PORT=5432
-    volumes:
-      - ./.local:/local
+  grpc-server:
+    build:
+      context: .
+    command: ["./grpc-server"]
+    container_name: grpc-server
+    hostname: grpc-server
+    # networks:
+    #   - cms
     ports:
       - 8000:8000
-
-  api:
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
     environment:
-      - GRPC_URL=localhost:8000
-    volumes:
-      - ./.local:/local
-    ports:
-      - 5000:5000
+      - PGUSER=${PGUSER:-postgres}
+      - PGPASSWORD=${PGPASSWORD:?database password not set}
+      - PGHOST=${PGHOST:-db}
+      - PGPORT=${PGPORT:-5433}
+      - PGDATABASE=${PGDATABASE:-cms}
+      - PGSSLMODE=${PGSSLMODE:-disable}
+      - HTTP_PORT=${HTTP_PORT:-8080}
+      - CURRENT_ENV=${CURRENT_ENV:-stage}
+      - LOG_PATH=${LOG_PATH:-./tmp/}
+    deploy:
+      restart_policy:
+        condition: on-failure
+        
+# networks:
+#   cms:
+#     external: true

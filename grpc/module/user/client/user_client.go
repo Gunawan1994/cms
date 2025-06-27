@@ -3,20 +3,17 @@ package client
 import (
 	"context"
 
-	pb "cms/protocgen/core/v1/auth"
+	pb "cms/protocgen/core/v1/user"
+
+	"cms/grpc/module/auth/client"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
-type AuthClients struct {
-	AuthClient pb.AuthServiceClient
-}
-
-type AuthParams struct {
-	URL   string
-	Token string
+type UserClients struct {
+	User pb.UserServiceClient
 }
 
 type CredentialsGRPC struct {
@@ -35,7 +32,7 @@ func (c *CredentialsGRPC) CredentialClientInterceptor(
 	return invoker(authCtx, method, req, reply, cc, opts...)
 }
 
-func NewClientAuth(ctx context.Context, params AuthParams) (*AuthClients, error) {
+func NewClientAuth(ctx context.Context, params client.AuthParams) (*UserClients, error) {
 	credentials := &CredentialsGRPC{
 		token: params.Token,
 	}
@@ -50,7 +47,7 @@ func NewClientAuth(ctx context.Context, params AuthParams) (*AuthClients, error)
 		return nil, err
 	}
 
-	return &AuthClients{
-		AuthClient: pb.NewAuthServiceClient(grpcClient),
+	return &UserClients{
+		User: pb.NewUserServiceClient(grpcClient),
 	}, nil
 }

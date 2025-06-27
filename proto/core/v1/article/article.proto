@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+
+option go_package = "cms/protocgen/core/v1/article";
+
+// Importing necessary dependencies
+import "global/meta/meta.proto";
+
+service ArticleService {
+    rpc CreateArticle(CreateArticleRequest) returns (CreateArticleResponse);
+    rpc GetArticle(GetArticleRequest) returns (GetArticleResponse);
+    rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse);
+    rpc UpdateArticle(UpdateArticleRequest) returns (UpdateArticleResponse);
+    rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse);
+}
+
+message Article {
+    int64 id = 1;
+    string title = 2;
+    string content = 3;
+    repeated string tag = 5;
+}
+
+message CreateArticleRequest {
+    Article article = 1;
+}
+
+message CreateArticleResponse {
+    Article article = 1;
+    Meta meta = 2;
+}
+
+message GetArticleRequest {
+    int64 id = 1;
+}
+
+message GetArticleResponse {
+    Article article = 1;
+    Meta meta = 2;
+}
+
+message ListArticlesRequest {
+    PaginationRequest pagination = 1;
+    FilterRequest query = 2;
+}
+
+message ListArticlesResponse {
+    repeated Article articles = 1;
+    Meta meta = 3;
+}
+
+message UpdateArticleRequest {
+    Article article = 1;
+}
+
+message UpdateArticleResponse {
+    Article article = 1;
+    Meta meta = 2;
+}
+
+message DeleteArticleRequest {
+    int64 id = 1;
+}
+
+message DeleteArticleResponse {
+    Article article = 1;
+    Meta meta = 2;
+}

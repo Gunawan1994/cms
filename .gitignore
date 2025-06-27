@@ -1,0 +1,13 @@
+.env
+
+# Other
+.env*
+bin/
+dev/
+tmp/
+vendor/
+tmp_app
+/.idea
+# protocgen/
+generated/
+

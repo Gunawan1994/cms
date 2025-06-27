@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-type BaseCreateUserReq struct {
-	Id        int       `json:"id"`
+type BaseUser struct {
+	Id        int64     `json:"id"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
 	Username  string    `json:"username"`
@@ -14,7 +14,15 @@ type BaseCreateUserReq struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (req *BaseCreateUserReq) ToDomain() *domain.User {
+type User struct {
+	Id        int64     `json:"id"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (req *BaseUser) ToDomain() *domain.User {
 	return &domain.User{
 		Id:       req.Id,
 		Email:    req.Email,
@@ -24,7 +32,7 @@ func (req *BaseCreateUserReq) ToDomain() *domain.User {
 }
 
 type CreateUserReq struct {
-	*BaseCreateUserReq
+	*BaseUser
 }
 
 type CreateUserRes struct {

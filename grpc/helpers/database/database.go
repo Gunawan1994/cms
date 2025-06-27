@@ -1,9 +1,12 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"gorm.io/gorm/schema"
@@ -73,5 +76,68 @@ func NewDatabase(driver string, cfg *Config) *Database {
 	sqlDB.SetConnMaxIdleTime(30 * time.Minute)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
+	restore(sqlDB)
+
 	return &Database{db: db}
+}
+
+func restore(db *sql.DB) {
+	sqlDump := `-- public.article definition
+
+-- Drop table
+
+-- DROP TABLE public.article;
+
+CREATE TABLE public.article (
+	id serial4 NOT NULL,
+	title varchar NULL,
+	"content" varchar NULL,
+	author_id int4 NULL,
+	created_at timestamp NULL,
+	updated_at timestamp NULL,
+	tag jsonb NULL,
+	CONSTRAINT article_pk PRIMARY KEY (id)
+);
+
+
+-- public."user" definition
+
+-- Drop table
+
+-- DROP TABLE public."user";
+
+CREATE TABLE public."user" (
+	id serial4 NOT NULL,
+	"password" varchar NULL,
+	email varchar NULL,
+	username varchar NULL,
+	created_at timestamp NULL,
+	updated_at timestamp NULL,
+	CONSTRAINT user_pk PRIMARY KEY (id)
+);
+
+
+-- public."role" definition
+
+-- Drop table
+
+-- DROP TABLE public."role";
+
+CREATE TABLE public."role" (
+
+);
+`
+	data := strings.Split(sqlDump, ";")
+	for _, stmt := range data {
+		stmt = strings.TrimSpace(stmt)
+		if stmt == "" {
+			continue
+		}
+		_, err := db.Exec(stmt)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	fmt.Println("Schema SQL executed successfully")
 }

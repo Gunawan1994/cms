@@ -14,9 +14,9 @@ type UserUseCaseImpl struct {
 	repo postgres.UserRepository
 }
 
-func NewAuthUseCase(
+func NewUserUseCase(
 	db *gorm.DB, repo postgres.UserRepository,
-) AuthUsecase {
+) UserUsecase {
 	return &UserUseCaseImpl{
 		db:   db,
 		repo: repo,
@@ -39,4 +39,31 @@ func (s *UserUseCaseImpl) Create(
 		return nil, err
 	}
 	return &model.CreateUserRes{User: body}, nil
+}
+
+func (s *UserUseCaseImpl) GetUserByEmail(
+	ctx context.Context, email string,
+) (*model.User, error) {
+	tx := s.db.Begin()
+	defer tx.Rollback()
+
+	user, err := s.repo.FindUserByEmail(ctx, tx, email)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return &model.User{
+		Id:        user.Id,
+		Email:     user.Email,
+		Username:  user.Username,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
 }
